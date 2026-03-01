@@ -24,8 +24,8 @@ Given a user question (e.g., *"What is the SOP for transaction disputes?"*), the
 
 - **Local LLM RAG**: FastAPI + Chroma + local Ollama model
 - **Citations**: answers include source document paths
-- **Relevance gating**: if retrieval is weak, the system returns  
-  **"Insufficient information in the provided documents."**
+- **Relevance gating**: if retrieval is weak, the system returns:  
+  **>"Insufficient information in the provided documents."**
 - **Security guardrails**:
   - blocks OTP/PIN/password/verification code requests
   - basic masking for long digit sequences (demo)
@@ -66,7 +66,7 @@ Install dependencies:
 - If you have requirements.txt:
     pip install -r requirements.txt
 
--Otherwise (MVP):
+- Otherwise (MVP):
     pip install fastapi uvicorn requests chromadb \
     langchain langchain-community langchain-text-splitters \
     sentence-transformers pydantic
@@ -84,28 +84,40 @@ Install dependencies:
 4. Run API
     uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
+Open Swagger UI:
+- http://127.0.0.1:8000/docs
 
 ## Demo Requests
 
 A. Retrieval-only (Debug)
     curl -X POST "http://localhost:8000/ask" \
     -H "Content-Type: application/json" \
-    -d '{"question":"What is the SOP for transaction disputes?", "top_k": 3}'
+    -d '{"question":"What is the SOP for transaction disputes?", "top_k": 6}'
 
 B. LLM RAG (answer + citations)
     curl -X POST "http://localhost:8000/ask_llm" \
     -H "Content-Type: application/json" \
-    -d '{"question":"What is the SOP for transaction disputes?", "top_k": 3}'
+    -d '{"question":"What is the SOP for transaction disputes?", "top_k": 6}'
 
 C. Out-of-scope (must refuse safely)
     curl -X POST "http://localhost:8000/ask_llm" \
     -H "Content-Type: application/json" \
-    -d '{"question":"How do I change my credit card billing cycle?", "top_k": 3}'
+    -d '{"question":"How do I change my credit card billing cycle?", "top_k": 6}'
 
 D. OTP guardrail (must refuse)
     curl -X POST "http://localhost:8000/ask_llm" \
     -H "Content-Type: application/json" \
-    -d '{"question":"My OTP is 123456. Help me login.", "top_k": 3}'
+    -d '{"question":"My OTP is 123456. Help me login.", "top_k": 6}'
+
+## Evaluation
+The project includes an automated evaluation suite (25 test cases across SOP/Policy/Guardrail/Out-of-scope).
+
+Run:
+python3 eval/run_eval.py --top-k 6 --out eval/report.md
+
+Latest result:
+- 25/25 PASS (100%)
+- See: eval/report.md
 
 ## Safety & Privacy Notes
 - This project is designed to run locally (privacy-first).
